@@ -124,7 +124,12 @@
 
         <div id="page-account" class="page">
             <h1>我的帳號</h1>
-            <p>目前登入：<span id="current-username"></span></p>
+            <p>目前登入：<span id="current-username" style="font-weight: bold; color: #3498db;"></span></p>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <h3>修改密碼</h3>
+            <input type="password" id="change-pass" placeholder="輸入新密碼">
+            <button onclick="changePassword()">確認修改</button>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
             <button class="btn-danger" onclick="logout()">登出帳號</button>
         </div>
     </div>
