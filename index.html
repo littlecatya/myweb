@@ -80,47 +80,10 @@
             <p style="color: #e74c3c; font-weight: bold;">上方連結訂閱！</p>
             <h3>最新影片：</h3>
             <div class="video-container">
-                <!-- 最新影片區塊 -->
-<div id="youtube-container">
-  <p>正在載入最新影片...</p>
-</div>
-
-<script>
-  // 已經幫你填好專屬的頻道 ID 囉！
-  const channelId = "UCw52qGmG1tD4V8qzrd6G71g"; 
-  
-  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
-  const rssToJsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
-  fetch(rssToJsonUrl)
-    .then(response => response.json())
-    .then(data => {
-      if (data.items && data.items.length > 0) {
-        // 抓取最新的一部影片
-        const latestVideo = data.items[0];
-        // 從網址中提取影片 ID
-        const videoId = latestVideo.link.split('v=')[1];
-        
-        // 把影片塞進網頁裡
-        document.getElementById('youtube-container').innerHTML = `
-          <iframe 
-            width="100%" 
-            height="315" 
-            src="https://www.youtube.com/embed/${videoId}" 
-            frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowfullscreen>
-          </iframe>
-        `;
-      } else {
-        document.getElementById('youtube-container').innerHTML = "<p>暫時無法載入影片</p>";
-      }
-    })
-    .catch(error => {
-      console.error("抓取影片失敗:", error);
-      document.getElementById('youtube-container').innerHTML = "<p>載入影片時出錯</p>";
-    });
-</script>
+                <!-- 最新影片自動更新區塊 -->
+                <div id="youtube-container">
+                    <p style="color: white; padding: 20px;">正在自動載入最新影片...</p>
+                </div>
             </div>
         </div>
 
@@ -188,9 +151,8 @@
     </div>
 
     <script>
-        // 這裡已經直接幫你填好剛剛複製的雲端網址囉！
+        // Firebase 雲端資料庫設定
         const FIREBASE_URL = "https://asume-1fda2-default-rtdb.firebaseio.com/";
-
         let currentUser = sessionStorage.getItem('currentUser') || null;
 
         // 封裝雲端 API 請求
@@ -204,6 +166,7 @@
             }
         }
 
+        // 分頁切換功能
         function switchPage(pageId) {
             document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
@@ -215,6 +178,7 @@
             if(pageId === 'clicker') streamLeaderboard();
         }
 
+        // 更新使用者介面狀態
         async function updateUI() {
             if (currentUser) {
                 document.getElementById('nav-auth').style.display = 'none';
@@ -235,6 +199,7 @@
             streamLeaderboard();
         }
 
+        // 註冊功能
         async function register() {
             let user = document.getElementById('reg-user').value.trim();
             let pass = document.getElementById('reg-pass').value;
@@ -255,6 +220,7 @@
             }
         }
 
+        // 登入功能
         async function login() {
             let user = document.getElementById('login-user').value.trim();
             let pass = document.getElementById('login-pass').value;
@@ -273,6 +239,7 @@
             }
         }
 
+        // 修改密碼功能
         async function changePassword() {
             let newPass = document.getElementById('change-pass').value;
             if(!newPass) return alert('請輸入新密碼！');
@@ -285,6 +252,7 @@
             document.getElementById('change-pass').value = '';
         }
 
+        // 登出功能
         function logout() {
             currentUser = null;
             sessionStorage.removeItem('currentUser');
@@ -293,6 +261,7 @@
             switchPage('home');
         }
 
+        // 送出留言
         async function postComment() {
             if(!currentUser) return alert('要登入才能留言喔！');
             let text = document.getElementById('comment-input').value.trim();
@@ -307,6 +276,7 @@
             streamComments();
         }
 
+        // 讀取並顯示留言
         async function streamComments() {
             let commentsData = await fbFetch(`/comments`);
             let container = document.getElementById('comment-list');
@@ -328,6 +298,7 @@
             });
         }
 
+        // 處理排行榜點擊
         async function handleClick() {
             if (!currentUser) return alert('請先登入！');
             
@@ -343,6 +314,7 @@
             streamLeaderboard();
         }
 
+        // 讀取並排序排行榜
         async function streamLeaderboard() {
             let usersData = await fbFetch(`/users`);
             let leaderboardBody = document.getElementById('leaderboard-body');
@@ -368,13 +340,61 @@
             });
         }
 
+        // ==========================================
+        // 🤖 YouTube 最新影片智慧自動更新小機器人區塊
+        // ==========================================
+        function loadLatestYouTubeVideo() {
+            const channelId = "UCw52qGmG1tD4V8qzrd6G71g"; 
+            const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+            const rssToJsonUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+            fetch(rssToJsonUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.items && data.items.length > 0) {
+                        const latestVideo = data.items[0];
+                        let videoId = "";
+                        
+                        // 使用最精準的 guid 欄位擷取影片 ID 防止解析失敗
+                        if (latestVideo.guid && latestVideo.guid.includes("video:")) {
+                            videoId = latestVideo.guid.split("video:")[1];
+                        } else if (latestVideo.link && latestVideo.link.includes("v=")) {
+                            videoId = latestVideo.link.split("v=")[1].split("&")[0];
+                        }
+
+                        if (videoId) {
+                            document.getElementById('youtube-container').innerHTML = `
+                                <iframe 
+                                    width="100%" 
+                                    height="315" 
+                                    src="https://www.youtube.com/embed/${videoId}" 
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen>
+                                </iframe>
+                            `;
+                        } else {
+                            document.getElementById('youtube-container').innerHTML = "<p style='color:white;padding:20px;'>解析影片 ID 失敗</p>";
+                        }
+                    } else {
+                        document.getElementById('youtube-container').innerHTML = "<p style='color:white;padding:20px;'>暫時無法載入影片</p>";
+                    }
+                })
+                .catch(error => {
+                    console.error("抓取影片失敗:", error);
+                    document.getElementById('youtube-container').innerHTML = "<p style='color:white;padding:20px;'>載入影片時出錯</p>";
+                });
+        }
+
         // 定時自動刷新雲端排行榜與留言 (每5秒)
         setInterval(() => {
             if(document.getElementById('page-clicker').classList.contains('active')) streamLeaderboard();
             if(document.getElementById('page-comments').classList.contains('active')) streamComments();
         }, 5000);
 
+        // 初始化執行
         updateUI();
+        loadLatestYouTubeVideo(); // 網頁載入時立刻跑小機器人自動抓影片
     </script>
 </body>
 </html>
