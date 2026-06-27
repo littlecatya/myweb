@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小喵呀的沒用網站 - 雲端連線版</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { display: flex; height: 100vh; background-color: #f5f5f5; color: #333; }
+        
+        /* 左側選單欄 */
+        .sidebar { width: 250px; background-color: #2c3e50; color: white; padding: 20px 0; display: flex; flex-direction: column; }
+        .sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 22px; color: #3498db; }
+        .menu-btn { background: none; border: none; color: #ecf0f1; padding: 15px 25px; text-align: left; font-size: 16px; cursor: pointer; transition: 0.3s; width: 100%; }
+        .menu-btn:hover, .menu-btn.active { background-color: #34495e; color: #3498db; border-left: 5px solid #3498db; }
+        
+        /* 主要內容區 */
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .page { display: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; }
+        .page.active { display: block; }
+        
+        h1 { margin-bottom: 20px; color: #2c3e50; }
+        p { line-height: 1.6; margin-bottom: 15px; }
+        a { color: #e74c3c; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+        
+        /* 輸入框與按鈕 */
+        input { display: block; width: 100%; max-width: 300px; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        button:hover { background-color: #2980b9; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        
+        /* 影片 */
+        .video-container { margin-top: 20px; background: #000; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; max-width: 560px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        /* 留言板 */
+        .comment-box { margin-bottom: 20px; }
+        .comment-list { border-top: 1px solid #eee; padding-top: 15px; max-height: 300px; overflow-y: auto; }
+        .comment-item { background: #f9f9f9; padding: 10px; margin-bottom: 10px; border-radius: 4px; border-left: 4px solid #3498db; }
+        .comment-user { font-weight: bold; color: #2c3e50; font-size: 14px; }
+        .comment-text { margin-top: 5px; }
+        
+        /* 排行榜 */
+        .click-section { text-align: center; padding: 20px; background: #f9f9f9; border-radius: 8px; margin-bottom: 20px; }
+        .click-btn { font-size: 24px; padding: 15px 40px; background-color: #2ecc71; }
+        .click-btn:hover { background-color: #27ae60; }
+        .counter { font-size: 28px; margin-top: 10px; font-weight: bold; color: #27ae60; }
+        .leaderboard-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .leaderboard-table th, .leaderboard-table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        .leaderboard-table th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <!-- 左側選單欄 -->
+    <div class="sidebar">
+        <h2>選單欄</h2>
+        <button class="menu-btn active" onclick="switchPage('home')">首頁</button>
+        <button class="menu-btn" onclick="switchPage('youtube')">我的 YouTube 頻道</button>
+        <button class="menu-btn" onclick="switchPage('comments')">留言板</button>
+        <button class="menu-btn" onclick="switchPage('clicker')">點擊與排行榜</button>
+        <button class="menu-btn" id="nav-auth" onclick="switchPage('auth')">登入註冊</button>
+        <button class="menu-btn" id="nav-account" style="display:none;" onclick="switchPage('account')">我的帳號</button>
+    </div>
+
+    <!-- 主要內容區 -->
+    <div class="main-content">
+        <!-- 首頁 -->
+        <div id="page-home" class="page active">
+            <h1>歡迎</h1>
+            <p style="font-size: 18px; font-weight: bold;">歡迎來到我的沒用網站，但你點進來了，還不訂閱我的YouTube頻道嗎？</p>
+        </div>
+
+        <!-- YouTube 頻道區 -->
+        <div id="page-youtube" class="page">
+            <h1>我的 YouTube 頻道</h1>
+            <p><a href="https://www.youtube.com/@little_cat_ya" target="_blank">👉 點我前往我的 YouTube 頻道 👈</a></p>
+            <p style="color: #e74c3c; font-weight: bold;">上方連結訂閱！</p>
+            <h3>最新影片：</h3>
+            <div class="video-container">
+                <iframe src="https://www.youtube.com/embed/?listType=user_uploads&list=little_cat_ya" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+
+        <!-- 留言板 -->
+        <div id="page-comments" class="page">
+            <h1>留言板</h1>
+            <div id="comment-form-container">
+                <p id="comment-warn" style="color: red;">⚠️ 請先登入才能留言！</p>
+                <div id="comment-input-area" style="display: none;">
+                    <input type="text" id="comment-input" placeholder="輸入你想說的話...">
+                    <button onclick="postComment()">送出留言</button>
+                </div>
+            </div>
+            <div class="comment-list" id="comment-list">正在載入雲端留言...</div>
+        </div>
+
+        <!-- 點擊與排行榜 -->
+        <div id="page-clicker" class="page">
+            <h1>點擊與排行榜</h1>
+            <div class="click-section">
+                <button class="click-btn" onclick="handleClick()">點我！</button>
+                <div class="counter">我的點擊數: <span id="my-clicks">0</span></div>
+            </div>
+            <h3>🏆 全球雲端即時排行榜</h3>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr><th>名次</th><th>帳號</th><th>點擊次數</th></tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="3">正在同步雲端排行榜...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 登入註冊區 -->
+        <div id="page-auth" class="page">
+            <h1>登入 / 註冊</h1>
+            <div style="display: flex; gap: 40px;">
+                <div>
+                    <h3>帳號登入</h3>
+                    <input type="text" id="login-user" placeholder="帳號">
+                    <input type="password" id="login-pass" placeholder="密碼">
+                    <button onclick="login()">登入</button>
+                </div>
+                <div style="border-left: 1px solid #ccc; padding-left: 40px;">
+                    <h3>新用戶註冊</h3>
+                    <input type="text" id="reg-user" placeholder="新帳號">
+                    <input type="password" id="reg-pass" placeholder="新密碼">
+                    <button onclick="register()">註冊</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的帳號區 -->
+        <div id="page-account" class="page">
+            <h1>我的帳號</h1>
+            <p>目前登入帳號：<span id="current-username" style="font-weight: bold; color: #3498db;"></span></p>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <h3>修改密碼</h3>
+            <input type="password" id="change-pass" placeholder="輸入新密碼">
+            <button onclick="changePassword()">確認修改</button>
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <button class="btn-danger" onclick="logout()">登出帳號</button>
+        </div>
+    </div>
+
+    <script>
+        // 這裡已經直接幫你填好剛剛複製的雲端網址囉！
+        const FIREBASE_URL = "https://asume-1fda2-default-rtdb.firebaseio.com/";
+
+        let currentUser = sessionStorage.getItem('currentUser') || null;
+
+        // 封裝雲端 API 請求
+        async function fbFetch(path, options = {}) {
+            try {
+                const res = await fetch(`${FIREBASE_URL}${path}.json`, options);
+                return await res.json();
+            } catch (e) {
+                console.error("雲端連線失敗:", e);
+                return null;
+            }
+        }
+
+        function switchPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`page-${pageId}`).classList.add('active');
+            const btnMap = { 'home': 0, 'youtube': 1, 'comments': 2, 'clicker': 3, 'auth': 4, 'account': 4 };
+            document.querySelectorAll('.menu-btn')[btnMap[pageId]].classList.add('active');
+
+            if(pageId === 'comments') streamComments();
+            if(pageId === 'clicker') streamLeaderboard();
+        }
+
+        async function updateUI() {
+            if (currentUser) {
+                document.getElementById('nav-auth').style.display = 'none';
+                document.getElementById('nav-account').style.display = 'block';
+                document.getElementById('comment-warn').style.display = 'none';
+                document.getElementById('comment-input-area').style.display = 'block';
+                document.getElementById('current-username').innerText = currentUser;
+                
+                let userData = await fbFetch(`/users/${currentUser}`);
+                document.getElementById('my-clicks').innerText = (userData && userData.clicks) ? userData.clicks : 0;
+            } else {
+                document.getElementById('nav-auth').style.display = 'block';
+                document.getElementById('nav-account').style.display = 'none';
+                document.getElementById('comment-warn').style.display = 'block';
+                document.getElementById('comment-input-area').style.display = 'none';
+                document.getElementById('my-clicks').innerText = '0 (未登入)';
+            }
+            streamLeaderboard();
+        }
+
+        async function register() {
+            let user = document.getElementById('reg-user').value.trim();
+            let pass = document.getElementById('reg-pass').value;
+            if(!user || !pass) return alert('請輸入帳號和密碼！');
+            if(/[.#$\[\]]/.test(user)) return alert('帳號不能包含 . # $ [ ] 等符號');
+
+            let existing = await fbFetch(`/users/${user}`);
+            if (existing) {
+                alert('這個帳號已經有人用了，換一個吧！');
+            } else {
+                await fbFetch(`/users/${user}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ password: pass, clicks: 0 })
+                });
+                alert('註冊成功！資料已儲存至雲端，請直接登入。');
+                document.getElementById('reg-user').value = '';
+                document.getElementById('reg-pass').value = '';
+            }
+        }
+
+        async function login() {
+            let user = document.getElementById('login-user').value.trim();
+            let pass = document.getElementById('login-pass').value;
+            
+            let userData = await fbFetch(`/users/${user}`);
+            if (userData && userData.password === pass) {
+                currentUser = user;
+                sessionStorage.setItem('currentUser', currentUser);
+                alert('登入成功！');
+                document.getElementById('login-user').value = '';
+                document.getElementById('login-pass').value = '';
+                await updateUI();
+                switchPage('home');
+            } else {
+                alert('帳號或密碼錯誤！');
+            }
+        }
+
+        async function changePassword() {
+            let newPass = document.getElementById('change-pass').value;
+            if(!newPass) return alert('請輸入新密碼！');
+            
+            await fbFetch(`/users/${currentUser}/password`, {
+                method: 'PUT',
+                body: JSON.stringify(newPass)
+            });
+            alert('雲端密碼修改成功！');
+            document.getElementById('change-pass').value = '';
+        }
+
+        function logout() {
+            currentUser = null;
+            sessionStorage.removeItem('currentUser');
+            alert('已登出。');
+            updateUI();
+            switchPage('home');
+        }
+
+        async function postComment() {
+            if(!currentUser) return alert('要登入才能留言喔！');
+            let text = document.getElementById('comment-input').value.trim();
+            if(!text) return alert('內容不能為空！');
+
+            await fbFetch(`/comments`, {
+                method: 'POST',
+                body: JSON.stringify({ username: currentUser, text: text })
+            });
+            
+            document.getElementById('comment-input').value = '';
+            streamComments();
+        }
+
+        async function streamComments() {
+            let commentsData = await fbFetch(`/comments`);
+            let container = document.getElementById('comment-list');
+            container.innerHTML = '';
+            
+            if(!commentsData) {
+                container.innerHTML = '<p style="color:#999;">目前雲端還沒有留言...</p>';
+                return;
+            }
+            
+            let list = Object.values(commentsData).reverse();
+            list.forEach(c => {
+                container.innerHTML += `
+                    <div class="comment-item">
+                        <div class="comment-user">👤 ${c.username}</div>
+                        <div class="comment-text">${c.text}</div>
+                    </div>
+                `;
+            });
+        }
+
+        async function handleClick() {
+            if (!currentUser) return alert('請先登入！');
+            
+            let currentClicks = parseInt(document.getElementById('my-clicks').innerText) || 0;
+            let newClicks = currentClicks + 1;
+            
+            document.getElementById('my-clicks').innerText = newClicks;
+            
+            await fbFetch(`/users/${currentUser}/clicks`, {
+                method: 'PUT',
+                body: JSON.stringify(newClicks)
+            });
+            streamLeaderboard();
+        }
+
+        async function streamLeaderboard() {
+            let usersData = await fbFetch(`/users`);
+            let leaderboardBody = document.getElementById('leaderboard-body');
+            if(!usersData) {
+                leaderboardBody.innerHTML = '<tr><td colspan="3">目前沒有數據</td></tr>';
+                return;
+            }
+
+            let sortedUsers = Object.keys(usersData).map(username => {
+                return { username: username, clicks: usersData[username].clicks || 0 };
+            }).sort((a, b) => b.clicks - a.clicks);
+
+            leaderboardBody.innerHTML = '';
+            sortedUsers.forEach((user, index) => {
+                let rowClass = currentUser === user.username ? 'style="background-color: #e8f4f8; font-weight: bold;"' : '';
+                leaderboardBody.innerHTML += `
+                    <tr ${rowClass}>
+                        <td>${index + 1}</td>
+                        <td>${user.username} ${currentUser === user.username ? '(你)' : ''}</td>
+                        <td>${user.clicks} 次</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // 定時自動刷新雲端排行榜與留言 (每5秒)
+        setInterval(() => {
+            if(document.getElementById('page-clicker').classList.contains('active')) streamLeaderboard();
+            if(document.getElementById('page-comments').classList.contains('active')) streamComments();
+        }, 5000);
+
+        updateUI();
+    </script>
+</body>
+</html>
